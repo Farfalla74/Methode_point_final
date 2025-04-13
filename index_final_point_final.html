@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Méthode Point Final</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #fff0f5; margin: 0; padding: 0; }
+    .container { max-width: 800px; margin: auto; padding: 20px; }
+    h1 { text-align: center; color: #e91e63; }
+    .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label, select, input, button { font-size: 1em; margin: 10px 0; display: block; width: 100%; }
+    button { background: #e91e63; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
+    .result { font-weight: bold; color: #333; margin-top: 10px; }
+    ul { padding-left: 1.2em; }
+    .aliment-item { cursor: pointer; }
+    .aliment-item:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Méthode Point Final</h1>
+    <div id="app"></div>
+  </div>
+  <script>
+    const app = document.getElementById("app");
+    let profil = JSON.parse(localStorage.getItem("profil")) || { sexe: "femme", poids: 70, activite: "sedentaire", plan: "easy" };
+    let pointsJournaliers = 0;
+    let pointsConsommes = 0;
+    let alimentsManges = [];
+    const lastReset = localStorage.getItem("lastReset");
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (lastReset !== today) resetJournee();
+
+    const tableauPoints = {
+      femme: {
+        sedentaire: [[70, 16, 13, 11], [80, 17, 14.5, 12.5], [90, 18.5, 16, 14], [100, 20, 17, 15], [999, 21.5, 18, 16]],
+        moderee: [[70, 18, 15, 13], [80, 19.5, 16.5, 14.5], [90, 21, 18, 16], [100, 22, 19, 17], [999, 23.5, 20.5, 18]],
+        active: [[70, 21, 18, 16], [80, 22.5, 19.5, 17.5], [90, 24, 21, 19], [100, 25.5, 22.5, 20.5], [999, 27, 24, 22]]
+      },
+      homme: {
+        sedentaire: [[70, 18, 14.5, 12.5], [80, 19.5, 16, 13.5], [90, 21, 17.5, 15], [100, 22.5, 19, 16.5], [999, 24, 20.5, 18]],
+        moderee: [[70, 22, 18.5, 16.5], [80, 23.5, 20, 18], [90, 25, 21.5, 19.5], [100, 26.5, 23, 21], [999, 28, 24.5, 22.5]],
+        active: [[70, 26, 22.5, 20.5], [80, 27.5, 24, 22], [90, 29, 25.5, 23.5], [100, 30.5, 27, 25], [999, 32, 28.5, 26.5]]
+      }
+    };
+
+    const aliments = [
+  { nom: "Pain complet (40g)", points: 1, categorie: "Féculents" },
+  { nom: "Pâtes cuites (100g)", points: 1.5, categorie: "Féculents" },
+  { nom: "Riz complet (100g)", points: 2, categorie: "Féculents" },
+  { nom: "Quinoa (100g)", points: 2, categorie: "Féculents" },
+  { nom: "Poulet sans peau (150g)", points: 1.5, categorie: "Protéines" },
+  { nom: "Tofu (150g)", points: 1, categorie: "Protéines" },
+  { nom: "Saumon (100g)", points: 2, categorie: "Protéines" },
+  { nom: "Huile d'olive (10g)", points: 1, categorie: "Matières Grasses" },
+  { nom: "Beurre (10g)", points: 2, categorie: "Matières Grasses" },
+  { nom: "Pommes", points: 0, categorie: "Fruits & Légumes" },
+  { nom: "Courgettes", points: 0, categorie: "Fruits & Légumes" },
+  { nom: "Avocat (100g)", points: 2, categorie: "Fruits & Légumes" },
+  { nom: "Pain au chocolat", points: 3, categorie: "Plaisirs" },
+  { nom: "Chocolat noir (20g)", points: 2, categorie: "Plaisirs" },
+  { nom: "Vin rouge (1 verre)", points: 2, categorie: "Plaisirs" }
+
+      { nom: "Pain complet (40g)", points: 1, categorie: "Féculents" },
+      { nom: "Pâtes cuites (100g)", points: 1.5, categorie: "Féculents" },
+      { nom: "Poulet sans peau (150g)", points: 1.5, categorie: "Protéines" },
+      { nom: "Huile d'olive (10g)", points: 1, categorie: "Matières Grasses" },
+      { nom: "Pommes", points: 0, categorie: "Fruits & Légumes" },
+      { nom: "Pain au chocolat", points: 3, categorie: "Plaisirs" }
+    ];
+
+    function renderApp() {
+      app.innerHTML = \`
+        <div class="section">
+          <h2>Profil</h2>
+          <label>Sexe:</label>
+          <select id="sexe">
+            <option value="femme">Femme</option>
+            <option value="homme">Homme</option>
+          </select>
+          <label>Poids (kg):</label>
+          <input type="number" id="poids" value="\${profil.poids}" />
+          <label>Activité:</label>
+          <select id="activite">
+            <option value="sedentaire">Sédentaire</option>
+            <option value="moderee">Modérée</option>
+            <option value="active">Très Active</option>
+          </select>
+          <label>Plan:</label>
+    <select id="plan" onchange="afficherResumePlan()">
+          <select id="plan">
+            <option value="easy">Easy</option>
+            <option value="start">Start</option>
+            <option value="boost">Boost</option>
+          </select>
+          </select>
+    <div id="resumePlan" class="result" style="font-style: italic; margin-top: 5px;"></div>
+    <button onclick="calculerPoints()">Calculer mes points journaliers</button>
+          <button onclick="resetJournee()">Nouveau jour</button>
+          <div id="pointsResult" class="result"></div>
+        </div>
+
+        <div class="section">
+          <h2>Suivi de la journée</h2>
+          <div class="result">Total consommé : <span id="consomme">\${pointsConsommes}</span> / <span id="quota">\${pointsJournaliers}</span> points</div>
+          <ul id="listeAlimentsManges"></ul>
+        </div>
+
+        <div class="section">
+          <h2>Équivalences</h2>
+          <input type="text" id="recherche" placeholder="Rechercher un aliment..." oninput="filtrerAliments()"/>
+          <ul id="equivalences"></ul>
+        </div>
+      \`;
+      document.getElementById("sexe").value = profil.sexe;
+      document.getElementById("activite").value = profil.activite;
+      document.getElementById("plan").value = profil.plan;
+      afficherEquivalences();
+      afficherAlimentsManges();
+      document.getElementById("pointsResult").textContent = \`Ton quota journalier : \${pointsJournaliers} points\`;
+    }
+
+    function calculerPoints() {
+      profil = {
+        sexe: document.getElementById("sexe").value,
+        poids: parseInt(document.getElementById("poids").value),
+        activite: document.getElementById("activite").value,
+        plan: document.getElementById("plan").value
+      };
+      localStorage.setItem("profil", JSON.stringify(profil));
+      for (let [max, easy, start, boost] of tableauPoints[profil.sexe][profil.activite]) {
+        if (profil.poids <= max) {
+          pointsJournaliers = profil.plan === "easy" ? easy : profil.plan === "start" ? start : boost;
+          break;
+        }
+      }
+      pointsConsommes = 0;
+      alimentsManges = [];
+      localStorage.setItem("lastReset", today);
+      function afficherResumePlan() {
+      const plan = document.getElementById("plan").value;
+      const resume = {
+        easy: "EASY 🧘‍♀️ — Pour manger équilibré au quotidien, sans pression.",
+        start: "START 🌱 — Pour commencer à perdre du poids doucement, sans frustration.",
+        boost: "BOOST ⚡ — Pour accélérer la perte de poids, en respectant ton équilibre."
+      };
+      document.getElementById("resumePlan").textContent = resume[plan];
+    }
+
+    renderApp();
+    setTimeout(afficherResumePlan, 50);
+    }
+
+    function ajouterAlimentDepuisEquivalences(nom, points) {
+      alimentsManges.push({ nom, points });
+      pointsConsommes += points;
+      afficherAlimentsManges();
+    }
+
+    function afficherAlimentsManges() {
+      const ul = document.getElementById("listeAlimentsManges");
+      document.getElementById("consomme").textContent = pointsConsommes;
+      document.getElementById("quota").textContent = pointsJournaliers;
+      ul.innerHTML = "";
+      alimentsManges.forEach(a => {
+        const li = document.createElement("li");
+        li.textContent = \`\${a.nom} : \${a.points} pt\`;
+        ul.appendChild(li);
+      });
+    }
+
+    function filtrerAliments() {
+      const recherche = document.getElementById("recherche").value.toLowerCase();
+      const filtered = aliments.filter(a => a.nom.toLowerCase().includes(recherche));
+      afficherEquivalences(filtered);
+    }
+
+    function afficherEquivalences(data = aliments) {
+      const ul = document.getElementById("equivalences");
+      ul.innerHTML = "";
+      data.forEach(a => {
+        const li = document.createElement("li");
+        li.textContent = \`\${a.nom} — \${a.points} pt (\${a.categorie})\`;
+        li.classList.add("aliment-item");
+        li.onclick = () => ajouterAlimentDepuisEquivalences(a.nom, a.points);
+        ul.appendChild(li);
+      });
+    }
+
+    function resetJournee() {
+      pointsConsommes = 0;
+      alimentsManges = [];
+      localStorage.setItem("lastReset", today);
+      function afficherResumePlan() {
+      const plan = document.getElementById("plan").value;
+      const resume = {
+        easy: "EASY 🧘‍♀️ — Pour manger équilibré au quotidien, sans pression.",
+        start: "START 🌱 — Pour commencer à perdre du poids doucement, sans frustration.",
+        boost: "BOOST ⚡ — Pour accélérer la perte de poids, en respectant ton équilibre."
+      };
+      document.getElementById("resumePlan").textContent = resume[plan];
+    }
+
+    renderApp();
+    setTimeout(afficherResumePlan, 50);
+    }
+
+    calculerPoints();
+  </script>
+</body>
+</html>
