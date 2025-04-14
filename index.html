@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Méthode Point Final</title>
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #fff0f5; padding: 20px; }
+    h1, h2 { color: #e91e63; text-align: center; }
+    .section { background: white; padding: 20px; margin: 10px auto; border-radius: 12px; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label, select, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
+    button { background-color: #e91e63; color: white; font-weight: bold; cursor: pointer; }
+    .aliment { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    #resultats, .points { font-weight: bold; text-align: center; }
+    #search { margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+
+  <h1>Méthode Point Final</h1>
+
+  <div class="section">
+    <h2>1. Profil</h2>
+    <input type="text" id="prenom" placeholder="Ton prénom">
+    <label for="sexe">Sexe</label>
+    <select id="sexe">
+      <option value="femme">Femme</option>
+      <option value="homme">Homme</option>
+    </select>
+    <label for="poids">Poids (kg)</label>
+    <input type="number" id="poids">
+    <label for="activite">Niveau d'activité</label>
+    <select id="activite">
+      <option value="sedentaire">Sédentaire</option>
+      <option value="moderee">Modérée</option>
+      <option value="active">Très active</option>
+    </select>
+    <label for="plan">Plan</label>
+    <select id="plan">
+      <option value="easy">Easy</option>
+      <option value="start">Start</option>
+      <option value="boost">Boost</option>
+    </select>
+    <button onclick="calculerPoints()">Calculer mes points journaliers</button>
+    <p id="resultats" class="points"></p>
+  </div>
+
+  <div class="section">
+    <h2>2. Recherche un aliment</h2>
+    <input type="text" id="search" placeholder="Ex : chocolat, pain, huile...">
+    <div id="equivalences"></div>
+  </div>
+
+  <div class="section">
+    <h2>3. Points restants</h2>
+    <p id="pointsRestants" class="points">-</p>
+  </div>
+
+  <script>
+    const aliments = [
+      { nom: "Pain complet (40g)", points: 1 },
+      { nom: "Frites au four (60g)", points: 1.5 },
+      { nom: "Banane (100g)", points: 1 },
+      { nom: "Chocolat noir (4 carrés)", points: 1.5 },
+      { nom: "Huile d’olive (10g)", points: 1 },
+      { nom: "Croissant", points: 3 }
+    ];
+
+    let quota = 0;
+    let totalAjoutes = 0;
+
+    function calculerPoints() {
+      const poids = parseInt(document.getElementById("poids").value);
+      const plan = document.getElementById("plan").value;
+      if (!poids || !plan) return;
+      if (poids <= 70) quota = plan === "easy" ? 16 : plan === "start" ? 13 : 11;
+      else if (poids <= 80) quota = plan === "easy" ? 17 : plan === "start" ? 14.5 : 12.5;
+      else quota = plan === "easy" ? 20 : plan === "start" ? 17 : 15;
+      totalAjoutes = 0;
+      document.getElementById("resultats").textContent = `Tu as droit à ${quota} points/jour.`;
+      majPointsRestants();
+    }
+
+    function majPointsRestants() {
+      const reste = Math.max(0, quota - totalAjoutes).toFixed(1);
+      document.getElementById("pointsRestants").textContent = `Points restants : ${reste}`;
+    }
+
+    function ajouterPoint(pt) {
+      totalAjoutes += pt;
+      majPointsRestants();
+    }
+
+    function afficherAliments(liste) {
+      const container = document.getElementById("equivalences");
+      container.innerHTML = "";
+      liste.forEach(a => {
+        const div = document.createElement("div");
+        div.className = "aliment";
+        div.innerHTML = `<span>${a.nom} - ${a.points} pt(s)</span><button onclick="ajouterPoint(${a.points})">+ Ajouter</button>`;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("search").addEventListener("input", function() {
+      const val = this.value.toLowerCase();
+      const filtres = aliments.filter(a => a.nom.toLowerCase().includes(val));
+      afficherAliments(filtres);
+    });
+
+    afficherAliments(aliments);
+  </script>
+
+</body>
+</html>
