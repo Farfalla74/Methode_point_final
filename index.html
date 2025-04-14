@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Méthode Point Final</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fff0f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #e91e63;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    label, select, input, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background: #e91e63;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .equivalence-item {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+    ul { padding: 0; list-style: none; }
+    li { margin: 5px 0; }
+    .result {
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="bonjour">Méthode Point Final</h1>
+
+    <div class="section">
+      <h2>Ton Profil</h2>
+      <label>Prénom</label>
+      <input type="text" id="prenom" placeholder="Ton prénom" />
+      <label>Sexe</label>
+      <select id="sexe">
+        <option value="femme">Femme</option>
+        <option value="homme">Homme</option>
+      </select>
+      <label>Poids (kg)</label>
+      <input type="number" id="poids" />
+      <label>Activité</label>
+      <select id="activite">
+        <option value="sedentaire">Sédentaire</option>
+        <option value="modere">Modérée</option>
+        <option value="active">Très active</option>
+      </select>
+      <label>Plan</label>
+      <select id="plan">
+        <option value="easy">Easy</option>
+        <option value="start">Start</option>
+        <option value="boost">Boost</option>
+      </select>
+      <button onclick="calculerPoints()">Calculer mes points</button>
+      <div class="result" id="pointsQuota"></div>
+    </div>
+
+    <div class="section">
+      <h2>Équivalences</h2>
+      <div id="equivalencesList"></div>
+    </div>
+
+    <div class="section">
+      <h2>Ajouter un aliment</h2>
+      <input type="text" id="alimentNom" placeholder="Nom de l'aliment" />
+      <input type="number" id="alimentPoints" placeholder="Points" />
+      <button onclick="ajouterAliment()">Ajouter</button>
+    </div>
+
+    <div class="section">
+      <h2>Suivi journalier</h2>
+      <ul id="listeAliments"></ul>
+      <div class="result" id="pointsRestants"></div>
+      <button onclick="resetJour()">Réinitialiser la journée</button>
+    </div>
+
+    <div class="section">
+      <h2>À propos des plans</h2>
+      <p><strong>Plan EASY 🧘‍♀️</strong><br>Pour manger équilibré au quotidien, sans pression.</p>
+      <p><strong>Plan START 🌱</strong><br>Pour commencer à perdre du poids doucement, sans frustration.</p>
+      <p><strong>Plan BOOST ⚡</strong><br>Pour accélérer la perte de poids, en respectant ton équilibre.</p>
+      <p><strong>Comment ça marche ?</strong><br>
+      Tu commences où tu veux, tu passes d’un plan à l’autre selon ton besoin :<br>
+      → Besoin de booster ? Tu montes d’un cran.<br>
+      → Besoin de ralentir ? Tu redescends.<br>
+      → Objectif atteint ? Tu restes sur EASY pour ancrer de bonnes habitudes.<br>
+      C’est flexible. C’est toi qui décides.</p>
+    </div>
+  </div>
+
+  <script>
+    const alimentsDefinis = [
+      { nom: "Pain (1 tranche)", points: 1 },
+      { nom: "Riz (100g)", points: 3 },
+      { nom: "Poulet (100g)", points: 2 },
+      { nom: "Légumes (100g)", points: 0 },
+      { nom: "Chocolat (1 carré)", points: 1 },
+      { nom: "Pizza (1 part)", points: 5 },
+      { nom: "Yaourt nature", points: 1 },
+      { nom: "Fruit (1)", points: 0 },
+    ];
+
+    let totalPoints = 0;
+    let quota = 0;
+
+    function enregistrerPrenom() {
+      const prenom = document.getElementById("prenom").value.trim();
+      if (prenom) {
+        localStorage.setItem("prenom", prenom);
+        document.getElementById("bonjour").innerText = "Bonjour " + prenom;
+      }
+    }
+
+    function calculerPoints() {
+      enregistrerPrenom();
+      const sexe = document.getElementById("sexe").value;
+      const activite = document.getElementById("activite").value;
+      const plan = document.getElementById("plan").value;
+      const poids = parseInt(document.getElementById("poids").value);
+
+      let points = 0;
+      if (sexe === "femme") {
+        if (activite === "sedentaire") {
+          points = (plan === "easy") ? 16 : (plan === "start") ? 13 : 11;
+        } else if (activite === "modere") {
+          points = (plan === "easy") ? 18 : (plan === "start") ? 15 : 13;
+        } else {
+          points = (plan === "easy") ? 21 : (plan === "start") ? 18 : 16;
+        }
+      } else {
+        if (activite === "sedentaire") {
+          points = (plan === "easy") ? 18 : (plan === "start") ? 15 : 13;
+        } else if (activite === "modere") {
+          points = (plan === "easy") ? 21 : (plan === "start") ? 18 : 16;
+        } else {
+          points = (plan === "easy") ? 24 : (plan === "start") ? 21 : 19;
+        }
+      }
+
+      if (poids > 70) points += 1;
+      if (poids > 80) points += 1;
+      if (poids > 90) points += 1;
+      if (poids > 100) points += 1;
+
+      quota = points;
+      totalPoints = 0;
+      document.getElementById("pointsQuota").innerText = `Tu as droit à ${points} points aujourd'hui.`;
+      updateRestants();
+    }
+
+    function updateRestants() {
+      document.getElementById("pointsRestants").innerText = `Points restants : ${quota - totalPoints}`;
+    }
+
+    function ajouterAliment(points = null, nom = null) {
+      const p = points ?? parseInt(document.getElementById("alimentPoints").value);
+      const n = nom ?? document.getElementById("alimentNom").value.trim();
+
+      if (p >= 0 && n) {
+        const li = document.createElement("li");
+        li.textContent = `${n} - ${p} pts`;
+        document.getElementById("listeAliments").appendChild(li);
+        totalPoints += p;
+        updateRestants();
+
+        if (!points) {
+          document.getElementById("alimentNom").value = "";
+          document.getElementById("alimentPoints").value = "";
+        }
+      }
+    }
+
+    function resetJour() {
+      document.getElementById("listeAliments").innerHTML = "";
+      totalPoints = 0;
+      updateRestants();
+    }
+
+    function afficherEquivalences() {
+      const container = document.getElementById("equivalencesList");
+      alimentsDefinis.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "equivalence-item";
+        div.innerHTML = `<span>${item.nom} – ${item.points} pt(s)</span><button onclick="ajouterAliment(${item.points}, '${item.nom}')">+ Ajouter</button>`;
+        container.appendChild(div);
+      });
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem("prenom");
+      if (saved) document.getElementById("bonjour").innerText = "Bonjour " + saved;
+      afficherEquivalences();
+    };
+  </script>
+</body>
+</html>
